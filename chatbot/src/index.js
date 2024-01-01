@@ -1,4 +1,5 @@
 import axios from 'axios'
+import * as ImagePicker from 'expo-image-picker'
 import * as Speech from 'expo-speech'
 import React from 'react'
 import { Button, Image, Text, View } from 'react-native'
@@ -7,7 +8,7 @@ import { GiftedChat } from 'react-native-gifted-chat'
 const Chatbot = () => {
   const [messages, setMessages] = React.useState([])
   const [codeToRun, setCodeToRun] = React.useState(null)
-  const apikey = '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'
+  const apikey = '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'
   const chatgptUrl = 'https://api.openai.com/v1/chat/completions'
   const dalleUrl = 'https://api.openai.com/v1/images/generations'
 
@@ -35,24 +36,30 @@ const Chatbot = () => {
       GiftedChat.append(previousMessages, [userMessage])
     )
 
-    const res = await client.post(chatgptUrl, {
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'user',
-          content: `wanna generate ai img?? ${text}. answer with a yes or no.`
-        }
-      ]
-    })
+    try {
+      const res = await client.post(chatgptUrl, {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `Does this message want to generate an AI picture, image, art, or anything similar? ${text}. Simply answer with a yes or no.`
+          }
+        ]
+      })
 
-    const isArt = res.data?.choices[0]?.message?.content?.trim()?.toLowerCase()
+      const isArt = res.data?.choices[0]?.message?.content
+        ?.trim()
+        ?.toLowerCase()
 
-    if (isArt?.includes('yes')) {
-      console.log('DALL·E API call')
-      return dalleApiCall(text)
-    } else {
-      console.log('ChatGPT API call')
-      return chatgptApiCall(text)
+      if (isArt?.includes('yes')) {
+        console.log('DALL·E API call')
+        return dalleApiCall(text)
+      } else {
+        console.log('ChatGPT API call')
+        return chatgptApiCall(text)
+      }
+    } catch (err) {
+      console.error('API call failed:', err)
     }
   }
 
@@ -188,10 +195,26 @@ const Chatbot = () => {
     )
   }
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1
+    })
+
+    if (!result.cancelled) {
+      // Process the selected image - e.g., upload or display it
+      console.log(result.uri) // Log the URI of the selected image
+      // You can also set it in state to display in your UI
+    }
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <View>
         <Text>Chatbot</Text>
+        <Button title="Select Image" onPress={pickImage} />
       </View>
       <GiftedChat
         messages={messages}
