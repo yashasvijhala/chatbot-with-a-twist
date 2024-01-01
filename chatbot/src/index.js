@@ -7,7 +7,7 @@ import { GiftedChat } from 'react-native-gifted-chat'
 const Chatbot = () => {
   const [messages, setMessages] = React.useState([])
   const [codeToRun, setCodeToRun] = React.useState(null)
-  const apikey = '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'
+  const apikey = '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'
   const chatgptUrl = 'https://api.openai.com/v1/chat/completions'
   const dalleUrl = 'https://api.openai.com/v1/images/generations'
 
@@ -40,7 +40,7 @@ const Chatbot = () => {
       messages: [
         {
           role: 'user',
-          content: `is it for picture?`
+          content: `wanna generate ai img?? ${text}. answer with a yes or no.`
         }
       ]
     })
@@ -48,10 +48,10 @@ const Chatbot = () => {
     const isArt = res.data?.choices[0]?.message?.content?.trim()?.toLowerCase()
 
     if (isArt?.includes('yes')) {
-      console.log('dall.e call')
+      console.log('DALL·E API call')
       return dalleApiCall(text)
     } else {
-      console.log('chatgpt call')
+      console.log('ChatGPT API call')
       return chatgptApiCall(text)
     }
   }
