@@ -1,12 +1,13 @@
 import axios from 'axios'
 import * as Speech from 'expo-speech'
 import React from 'react'
-import { Image, Text, View } from 'react-native'
+import { Button, Image, Text, View } from 'react-native'
 import { GiftedChat } from 'react-native-gifted-chat'
 
 const Chatbot = () => {
   const [messages, setMessages] = React.useState([])
-  const apikey = ''
+  const [codeToRun, setCodeToRun] = React.useState(null)
+  const apikey = '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'
   const chatgptUrl = 'https://api.openai.com/v1/chat/completions'
   const dalleUrl = 'https://api.openai.com/v1/images/generations'
 
@@ -86,6 +87,81 @@ const Chatbot = () => {
       pitch: 1.0,
       rate: 1.0
     })
+    if (answer.includes('```')) {
+      const startIndex = answer.indexOf('```')
+      const endIndex = answer.indexOf('```', startIndex + 3)
+      if (endIndex !== -1) {
+        const code = answer.slice(startIndex + 3, endIndex).trim()
+        setCodeToRun(code)
+      }
+    }
+  }
+
+  const runCode = async () => {
+    if (!codeToRun) return
+    let code = codeToRun.trim()
+    let lang = ''
+    const space = code.indexOf(' ')
+    const nl = code.indexOf('\n')
+
+    if (space !== -1 && nl !== -1) {
+      lang = code.substring(0, Math.min(space, nl)).toLowerCase()
+    } else if (space !== -1) {
+      lang = code.substring(0, space).toLowerCase()
+    } else if (nl !== -1) {
+      lang = code.substring(0, nl).toLowerCase()
+    } else {
+      lang = code.toLowerCase()
+    }
+
+    console.log('lang:', lang)
+
+    if (lang.length > 0) {
+      const i = code.indexOf('\n') !== -1 ? nl : space
+      code = code.substring(i + 1).trim()
+    }
+    console.log('code:', code)
+    if (lang == 'javascript' || lang == 'js') {
+      lang = 'nodejs'
+    } else if (lang == 'python') {
+      lang = 'python3'
+    }
+    const rapidApiKey = 'fcf6727181mshab6af9d51fada5ep1ea825jsnfd5135f21a8e'
+    const rapidApiHost = 'online-code-compiler.p.rapidapi.com'
+    const rapidApiUrl = 'https://online-code-compiler.p.rapidapi.com/v1/'
+
+    const options = {
+      method: 'POST',
+      url: rapidApiUrl,
+      headers: {
+        'content-type': 'application/json',
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': rapidApiHost
+      },
+      data: {
+        language: lang,
+        version: 'latest',
+        code: code,
+        input: null
+      }
+    }
+
+    const response = await axios.request(options)
+    console.log('API Response:', response.data)
+
+    const outputMessage = {
+      _id: Math.random().toString(),
+      text: `Output: ${response.data.output || 'No output'}`,
+      createdAt: new Date(),
+      user: {
+        _id: 2,
+        name: 'ChatBot'
+      }
+    }
+
+    setMessages(previousMessages =>
+      GiftedChat.append(previousMessages, [outputMessage])
+    )
   }
 
   const dalleApiCall = async prompt => {
@@ -130,6 +206,17 @@ const Chatbot = () => {
           _id: 1
         }}
       />
+      {codeToRun !== null && (
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            marginTop: 10
+          }}
+        >
+          <Button title="Run Code" onPress={runCode} />
+        </View>
+      )}
     </View>
   )
 }
