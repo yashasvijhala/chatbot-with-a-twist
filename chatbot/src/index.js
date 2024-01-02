@@ -204,9 +204,8 @@ const Chatbot = () => {
     })
 
     if (!result.cancelled) {
-      // Process the selected image - e.g., upload or display it
-      console.log(result.uri) // Log the URI of the selected image
-      // You can also set it in state to display in your UI
+      
+      console.log(result.uri)
     }
   }
 
